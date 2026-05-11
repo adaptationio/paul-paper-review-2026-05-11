@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Navier–Stokes Reduction Paper — Review by team-willie</title>
+<style>
+:root{
+  --primary:#0d1117;--secondary:#161b22;--accent:#0f3460;--text:#e6edf3;--muted:#8b949e;
+  --card-bg:#1c2333;--card-border:#30363d;--success:#3fb950;--warning:#d29922;
+  --info:#58a6ff;--purple:#bc8cff;--teal:#2dd4bf;--orange:#f0883e;--pink:#ff6b9d;
+  --highlight:#e94560;--gold:#c9a353;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;background:var(--primary);color:var(--text);line-height:1.7;font-size:15.5px}
+a{color:var(--info);text-decoration:none}a:hover{text-decoration:underline}
+code,.math,.eq{font-family:'JetBrains Mono','SF Mono','Menlo',monospace;font-size:.88em;background:rgba(45,212,191,.06);padding:1px 6px;border-radius:4px;color:var(--teal)}
+.eq{display:block;padding:.8rem 1rem;margin:.8rem 0;border-left:2px solid var(--purple);background:rgba(188,140,255,.04);font-size:.92rem;color:var(--text);overflow-x:auto;white-space:nowrap}
+.serif{font-family:'Fraunces','EB Garamond',Georgia,serif}
+
+/* ===== gate ===== */
+.gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 20%,#0d1a2e 0%,#060612 60%,#000 100%);z-index:1000}
+.gate-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;padding:2.5rem 3rem;max-width:420px;text-align:center}
+.gate-card h2{font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:1.5rem;margin-bottom:.4rem}
+.gate-card .sub{color:var(--muted);font-size:.85rem;margin-bottom:1.5rem}
+.gate-card input{width:100%;padding:.7rem 1rem;background:var(--primary);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:.95rem;font-family:inherit}
+.gate-card input:focus{outline:none;border-color:var(--teal)}
+.gate-card button{width:100%;margin-top:.8rem;padding:.7rem;background:linear-gradient(135deg,var(--teal),var(--purple));border:none;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;font-size:.95rem}
+.gate-card .err{color:var(--highlight);font-size:.78rem;margin-top:.6rem;min-height:1rem}
+
+/* ===== layout ===== */
+.hidden{display:none!important}
+.hero{background:linear-gradient(135deg,#060612 0%,#0d1a2e 30%,#1a0a2e 70%,#0a0f1a 100%);padding:2.5rem 3rem 2rem;border-bottom:3px solid var(--teal);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;right:-15%;width:600px;height:600px;background:radial-gradient(circle,rgba(45,212,191,.06) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-30%;left:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(188,140,255,.05) 0%,transparent 70%);pointer-events:none}
+.hero-row{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;position:relative;z-index:2}
+.hero .kicker{color:var(--teal);font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:.4rem}
+.hero h1{font-family:'Fraunces',Georgia,serif;font-size:2.1rem;font-weight:700;line-height:1.2;max-width:900px}
+.hero h1 em{font-style:italic;color:var(--teal)}
+.hero-meta{font-size:.85rem;color:var(--muted);display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:1rem}
+.hero-meta strong{color:var(--text)}
+.tag{display:inline-flex;align-items:center;gap:.4rem;padding:4px 12px;background:rgba(63,185,80,.12);border:1px solid rgba(63,185,80,.3);border-radius:14px;color:var(--success);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+
+.nav{display:flex;flex-wrap:wrap;gap:0;padding:0 3rem;background:var(--secondary);border-bottom:1px solid var(--card-border);position:sticky;top:0;z-index:100}
+.nav a{padding:.85rem 1.1rem;border-bottom:3px solid transparent;color:var(--muted);font-weight:500;font-size:.82rem;transition:all .2s;white-space:nowrap;cursor:pointer}
+.nav a:hover{color:var(--text);text-decoration:none}
+
+main{max-width:1100px;margin:0 auto;padding:2rem 3rem 4rem}
+
+section{margin-bottom:3rem;scroll-margin-top:60px}
+section h2{font-family:'Fraunces',Georgia,serif;font-size:1.55rem;font-weight:700;margin-bottom:1rem;padding-bottom:.6rem;border-bottom:2px solid var(--card-border);display:flex;align-items:baseline;gap:.6rem}
+section h2 .num{color:var(--teal);font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:500}
+section h3{font-family:'Fraunces',Georgia,serif;font-size:1.15rem;font-weight:600;margin:1.2rem 0 .6rem;color:var(--text)}
+section p{margin-bottom:.8rem;color:#d1d7e0}
+section ul, section ol{margin:.6rem 0 .8rem 1.4rem;color:#d1d7e0}
+section li{margin-bottom:.4rem;line-height:1.6}
+section li strong{color:var(--text)}
+
+.card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;padding:1.2rem 1.5rem;margin:1rem 0}
+.card-tldr{background:linear-gradient(135deg,rgba(45,212,191,.08) 0%,var(--card-bg) 100%);border-color:rgba(45,212,191,.3)}
+.card-tldr h3{margin-top:0;color:var(--teal)}
+.card-warning{background:linear-gradient(135deg,rgba(210,153,34,.06) 0%,var(--card-bg) 100%);border-color:rgba(210,153,34,.3)}
+.card-warning h3{margin-top:0;color:var(--warning)}
+.card-bonus{background:linear-gradient(135deg,rgba(188,140,255,.06) 0%,var(--card-bg) 100%);border-color:rgba(188,140,255,.3)}
+.card-bonus h3{margin-top:0;color:var(--purple)}
+
+.theorem{background:rgba(15,52,96,.18);border-left:3px solid var(--info);padding:1rem 1.3rem;margin:1rem 0;border-radius:0 8px 8px 0}
+.theorem .head{font-family:'Fraunces',Georgia,serif;font-style:italic;color:var(--info);font-weight:600;margin-bottom:.4rem}
+
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.88rem;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;overflow:hidden}
+table th{background:rgba(45,212,191,.06);text-align:left;padding:.7rem 1rem;font-weight:600;color:var(--teal);font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border)}
+table td{padding:.55rem 1rem;border-bottom:1px solid rgba(48,54,61,.4);color:#d1d7e0}
+table tr:last-child td{border-bottom:none}
+table tr:hover td{background:rgba(45,212,191,.02)}
+table td.num{font-family:'JetBrains Mono',monospace;font-size:.85rem;text-align:right}
+table tr.target td{background:rgba(188,140,255,.08);font-weight:600;color:var(--purple)}
+
+.chain{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.6rem;margin:1rem 0}
+.chain-step{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:.7rem 1rem}
+.chain-step .num{color:var(--teal);font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;margin-bottom:.2rem}
+.chain-step .name{font-weight:600;font-size:.92rem;margin-bottom:.2rem}
+.chain-step .desc{font-size:.78rem;color:var(--muted);line-height:1.5}
+.chain-step.key{border-color:var(--purple);background:linear-gradient(135deg,rgba(188,140,255,.08) 0%,var(--card-bg) 100%)}
+.chain-step.key .num{color:var(--purple)}
+
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0}
+.score{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:.9rem 1.1rem}
+.score h4{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1rem;margin-bottom:.3rem;color:var(--text)}
+.score .bar{height:6px;background:rgba(48,54,61,.6);border-radius:3px;overflow:hidden;margin:.5rem 0 .35rem}
+.score .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--purple));border-radius:3px}
+.score .label{font-size:.76rem;color:var(--muted);display:flex;justify-content:space-between}
+
+.callout{background:var(--secondary);border:1px solid var(--card-border);border-left:3px solid var(--gold);padding:.9rem 1.2rem;margin:1rem 0;border-radius:0 8px 8px 0;font-size:.92rem;color:#d1d7e0}
+.callout strong{color:var(--gold)}
+
+.refs{font-size:.85rem;color:var(--muted);columns:2;column-gap:2rem}
+.refs li{margin-bottom:.5rem;break-inside:avoid;list-style:none;padding-left:1.5em;text-indent:-1.5em}
+.refs li::before{content:counter(refcount,decimal) ".  ";counter-increment:refcount;color:var(--teal);font-family:'JetBrains Mono',monospace}
+.refs{counter-reset:refcount}
+
+.footer{padding:2rem 3rem;text-align:center;color:var(--muted);font-size:.78rem;border-top:1px solid var(--card-border);margin-top:3rem}
+.footer code{color:var(--teal)}
+
+@media(max-width:768px){
+  .hero,.nav,main,.footer{padding-left:1.2rem;padding-right:1.2rem}
+  .hero h1{font-size:1.45rem}
+  .nav{overflow-x:auto}
+  .score-grid{grid-template-columns:1fr}
+  .refs{columns:1}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Password gate ===== -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <h2>Restricted Report</h2>
+    <div class="sub">Review of an unpublished mathematics paper. Password required.</div>
+    <input id="pw" type="password" placeholder="Password" autofocus>
+    <button onclick="checkPw()">Open report</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<div class="report hidden" id="report">
+
+<!-- ===== Hero ===== -->
+<div class="hero">
+  <div class="hero-row">
+    <div>
+      <div class="kicker">Paper review · team-willie · 2026-05-11</div>
+      <h1>A <em>conditional reduction</em> of the L<sup>3</sup> double-log Navier–Stokes blow-up rate</h1>
+      <div class="hero-meta">
+        <span><strong>Paper:</strong> Robinson, P. — <em>A reduction of the L³ double-logarithmic blow-up rate for the Navier–Stokes equations to a quantitative resonance-cancellation estimate</em></span>
+        <span><strong>Format:</strong> 10 pp, LaTeX, single author, "Independent"</span>
+        <span><strong>Dated:</strong> 10 May 2026</span>
+        <span><strong>Reviewer:</strong> team-willie</span>
+      </div>
+    </div>
+    <span class="tag">conditional reduction · not a proof of Clay</span>
+  </div>
+</div>
+
+<!-- ===== Nav ===== -->
+<div class="nav">
+  <a href="#tldr">TL;DR</a>
+  <a href="#lineage">Lineage</a>
+  <a href="#claim">The reduction</a>
+  <a href="#mechanism">Hypothesis G</a>
+  <a href="#numerical">Numerical evidence</a>
+  <a href="#structural">Three approaches, one barrier</a>
+  <a href="#ns-fingerprint">NS-fingerprint discharge</a>
+  <a href="#credibility">Credibility</a>
+  <a href="#workflow">Workflow signal</a>
+  <a href="#recommendation">Recommendation</a>
+  <a href="#reply">Draft reply</a>
+</div>
+
+<main>
+
+<!-- ===== TL;DR ===== -->
+<section id="tldr">
+  <div class="card card-tldr">
+    <h3>One-line summary</h3>
+    <p>Paul's paper announces a <strong>conditional reduction</strong> of a named open problem in 3D Navier–Stokes regularity theory — the "L<sup>3</sup> double-log" conjecture in the lineage of Tao 2019 — to a single quantitative bilinear estimate (Hypothesis G). He does <strong>not</strong> prove the open problem; he proves <em>"if G holds, then the double-log bound follows"</em>, and isolates G as the new open problem.</p>
+    <p style="margin-top:.6rem"><strong>What this is not:</strong> a proof of the Clay Millennium Problem. Not even a proof of the double-log bound. It's a structural <em>reduction</em>.</p>
+    <p><strong>What this is:</strong> the kind of paper that, if the L<sub>1</sub>→L<sub>12</sub> chain checks out under refereeing, would be a legitimate advance in the Tao 2019 programme — publishable in <em>ARMA</em>, <em>Annals of PDE</em>, or similar. Above the "amateur Navier–Stokes" line by a wide margin; below the "proof of Clay" line by an equally wide margin.</p>
+  </div>
+</section>
+
+<!-- ===== Lineage ===== -->
+<section id="lineage">
+  <h2><span class="num">§1</span> The lineage — why this matters</h2>
+  <p>To anchor what's happening:</p>
+  <ol>
+    <li><strong>Clay Millennium Problem (2000, $1M).</strong> Does a smooth solution to the 3D incompressible Navier–Stokes equations stay smooth forever, or can it develop a singularity in finite time?</li>
+    <li><strong>Escauriaza–Seregin–Šverák (2003).</strong> If a solution blows up at time T<sub>*</sub>, its <span class="math">L<sup>3</sup></span> norm <em>must</em> diverge. So L<sup>3</sup> is the "critical" detector for blow-up.</li>
+    <li><strong>Tao (2019, arXiv:1908.04958).</strong> Gave a <em>quantitative</em> version — if blow-up occurs, the L<sup>3</sup> norm must grow at least like a <strong>triple-iterated logarithm</strong>:
+      <div class="eq">A ≥ c · ( log log log ( 1 / (T<sub>*</sub> − t) ) )<sup>c</sup></div>
+    </li>
+    <li><strong>The natural next conjecture — "double log".</strong> Improve "triple log" to "double log":
+      <div class="eq">A ≥ c · ( log log ( 1 / (T<sub>*</sub> − t) ) )<sup>c</sup>   ⇔   A ≥ exp( exp( c · A<sup>−c</sup> ) )</div>
+      Widely conjectured. <em>Unproved.</em> This is the milestone Paul targets — well short of the full Clay problem, but the natural next step after Tao 2019.</li>
+  </ol>
+  <div class="callout"><strong>Where Paul sits:</strong> Tao's triple-log proof has three nested pigeonhole layers — frequency, time-slab, and Carleman back-propagation. To reach double-log you must collapse one of these without forfeiting the other two. The frequency layer is structurally rigid in any L<sup>3</sup>-critical bookkeeping. So one of the other two must be saved. Paul's route saves the time-slab layer by exploiting a kinematic cancellation on the resonant remainder of Bony's paraproduct decomposition.</div>
+</section>
+
+<!-- ===== The reduction ===== -->
+<section id="claim">
+  <h2><span class="num">§2</span> What he claims — Theorem 1, the "reduction"</h2>
+  <p>The convective term <span class="math">u·∇u</span> in Navier–Stokes is split using <strong>Bony's paraproduct decomposition</strong> (a standard 1981 harmonic-analysis technique):</p>
+  <div class="eq">u · ∇u  =  T<sub>u</sub>(∇u)  +  T<sub>∇u</sub>(u)  +  R(u, ∇u)</div>
+  <p>The first two pieces ("paraproducts") are estimated cleanly — <strong>no logarithmic loss</strong>. The only source of a stray log in Tao's proof is the third piece, the <strong>diagonal resonant remainder</strong> <span class="math">R(u, ∇u)</span>. If you can save that one log, triple-log → double-log.</p>
+
+  <div class="theorem">
+    <div class="head">Theorem 1 (Reduction).</div>
+    Assume <strong>Hypothesis G</strong> (the resonance-cancellation gain). Then any smooth solution of the 3D Navier–Stokes equations satisfying ‖u‖<sub>L<sup>∞</sup><sub>t</sub>L<sup>3</sup><sub>x</sub></sub> ≤ A and blowing up at T<sub>*</sub> satisfies the double-logarithmic bound A ≥ exp(exp(c · A<sup>−c</sup>)) for an absolute c &gt; 0.
+  </div>
+
+  <p>The proof is a 12-step chain L<sub>1</sub> → L<sub>12</sub>, summarised in §3 of the paper. <strong>Eleven of the twelve steps use only standard, properly cited tools.</strong> The single non-standard input is <strong>G</strong>.</p>
+
+  <div class="chain">
+    <div class="chain-step"><div class="num">L1</div><div class="name">Setup</div><div class="desc">Koch–Tataru well-posedness fixes the back-propagation interval [T<sub>0</sub>, T<sub>*</sub>) with δ<sub>A</sub> = c·A<sup>−4</sup>.</div></div>
+    <div class="chain-step"><div class="num">L2</div><div class="name">Bony decomposition</div><div class="desc">Split <span class="math">u·∇u</span> into two paraproducts + one resonant remainder.</div></div>
+    <div class="chain-step"><div class="num">L3</div><div class="name">High–low paraproduct</div><div class="desc">Lemma 2: no log loss on the two paraproduct pieces. Standard Bernstein + Bahouri–Chemin–Danchin §2.97.</div></div>
+    <div class="chain-step"><div class="num">L4</div><div class="name">Pressure recovery</div><div class="desc">Lemma 3: p = R<sub>i</sub>R<sub>j</sub>(u<sub>i</sub>u<sub>j</sub>) decomposed paraproduct-style; resonant block feeds L<sub>6</sub>.</div></div>
+    <div class="chain-step"><div class="num">L5</div><div class="name">Standard resonant estimate</div><div class="desc">Lemma 4: the one-log loss in Tao's architecture lives here.</div></div>
+    <div class="chain-step key"><div class="num">L6 ★</div><div class="name">Resonance-cancellation gain</div><div class="desc">The <em>only</em> step that invokes <strong>G</strong>. Buys back a half-derivative with residual loss ε(A) ≤ A<sup>−η</sup>.</div></div>
+    <div class="chain-step"><div class="num">L7</div><div class="name">Closure inversion</div><div class="desc">Lemma 5: algebraic inequality 2C·√c<sub>KT</sub>·A<sup>−1−η</sup>·log A ≤ c<sub>*</sub> — verified numerically for A ≥ 100.</div></div>
+    <div class="chain-step"><div class="num">L8</div><div class="name">Frequency-localised bootstrap</div><div class="desc">Duhamel mild solution on a single dyadic shell N<sub>*</sub>; the unique pigeonhole log A factor in the whole proof.</div></div>
+    <div class="chain-step"><div class="num">L9</div><div class="name">Backward propagation</div><div class="desc">Single application of Tao 2019 Lemma 3.1 — converts smallness at T<sub>*</sub> to smallness at T<sub>0</sub> at cost e<sup>CA<sup>c</sup></sup>.</div></div>
+    <div class="chain-step"><div class="num">L10</div><div class="name">Log-count accounting</div><div class="desc">L<sub>8</sub> contributes 1 log + L<sub>9</sub> contributes 1 application + L<sub>6</sub> saves 1 log = <strong>2 iterated exponentials</strong>. The whole game.</div></div>
+    <div class="chain-step"><div class="num">L11</div><div class="name">Whitney patching</div><div class="desc">Tao 2019 §5: local quantitative bound patches to global lim-sup without further log loss.</div></div>
+    <div class="chain-step"><div class="num">L12</div><div class="name">Conclude</div><div class="desc">Combine with ESS 2003 + subcritical reduction → A ≥ exp(exp(c·A<sup>−c</sup>)). □</div></div>
+  </div>
+  <p class="callout"><strong>Read this carefully:</strong> the load-bearing step is L<sub>10</sub> (Log-count accounting). The whole reduction stands or falls on whether the bookkeeping in that step actually closes — i.e., whether the saving from L<sub>6</sub> truly compensates the cost from L<sub>8</sub>+L<sub>9</sub>. A referee's first hour is spent on L<sub>10</sub>.</p>
+</section>
+
+<!-- ===== Hypothesis G ===== -->
+<section id="mechanism">
+  <h2><span class="num">§3</span> Hypothesis G — qualitative known, quantitative open</h2>
+
+  <div class="theorem">
+    <div class="head">Hypothesis G (the resonance-cancellation gain).</div>
+    There exists an <em>absolute</em> η &gt; 0 such that, for every divergence-free Schwartz field u on ℝ³ and every dyadic frequency N,
+    <div class="eq" style="margin:.6rem 0;border-color:var(--info);background:rgba(15,52,96,.16)">‖P<sub>N</sub> ℙ R(u, ∇u)‖<sub>L²</sub>  ≤  C · N<sup>−1/2+ε(A)</sup> · Σ<sub>j ≥ N/8</sub> N<sup>3/2</sup> ‖P<sub>j</sub>u‖²<sub>L²</sub>,    ε(A) ≤ C′·A<sup>−η</sup></div>
+    where ℙ is the Leray projector onto divergence-free fields and A = ‖u‖<sub>L<sup>∞</sup><sub>t</sub>L<sup>3</sup></sub>.
+  </div>
+
+  <h3>The mechanism — kinematic cancellation</h3>
+  <p>On the resonant pairs (frequencies j ≈ k), the symbol of the symmetrised pair P<sub>j</sub>u · ∇P<sub>k</sub>u + P<sub>k</sub>u · ∇P<sub>j</sub>u contains the factor (η + (ξ−η))·û(η) û(ξ−η). The divergence-free constraint ξ·û(ξ) = 0 forces this to vanish to first order in the sum-frequency direction at the diagonal pair (j=j). After Leray projection, this becomes a <strong>free half-derivative</strong> on R(u, ∇u).</p>
+  <p>The <em>qualitative</em> form of this gain is textbook (Bahouri–Chemin–Danchin §3.2). <strong>What is open is the precise A-dependence of the residual</strong> at the off-diagonal pairs (j, j±1) and (j, j±2), where the symmetrisation is incomplete. That's what G isolates.</p>
+
+  <h3>Why "absolute η" is the right target</h3>
+  <p>Paul splits ℙR(u, ∇u) = ℙR<sub>diag</sub> + ℙR<sub>off</sub>. The half-derivative gain is sharp on the diagonal block; the loss ε(A) in G comes <em>entirely</em> from R<sub>off</sub>. A-dependence enters via Bernstein constants in the mixed-Lebesgue partition at L³ criticality. The <strong>residual off-diagonal</strong> question becomes a single Calderón–Zygmund / paraproduct-calculus question — well-posed and structurally familiar to harmonic-analysis experts.</p>
+</section>
+
+<!-- ===== Numerical evidence ===== -->
+<section id="numerical">
+  <h2><span class="num">§4</span> Numerical evidence — clever and load-bearing</h2>
+  <p>Paul models the compounded log-cost over K = ⌊log A⌋ bootstrap iterations as:</p>
+  <div class="eq">C(A) = (1 − ε(A))<sup>K</sup> · (log A)²</div>
+  <p>Target for double-log: <span class="math">C(A) ~ log A · log log A</span>. Standard Tao 2019 cost (no saving): <span class="math">C(A) ~ (log A)²</span>. He tabulates three regimes for ε(A):</p>
+
+  <table>
+    <thead><tr>
+      <th>A</th><th>log A</th><th>log log A</th>
+      <th>C(A), η=0.10 const</th>
+      <th>C(A), η=1/log A</th>
+      <th>C(A), η=1/(log A)²</th>
+    </tr></thead>
+    <tbody>
+      <tr><td class="num">10²</td><td class="num">4.61</td><td class="num">1.53</td><td class="num">19.10</td><td class="num">7.81</td><td class="num">19.61</td></tr>
+      <tr><td class="num">10⁴</td><td class="num">9.21</td><td class="num">2.22</td><td class="num">76.39</td><td class="num">31.21</td><td class="num">77.97</td></tr>
+      <tr><td class="num">10⁶</td><td class="num">13.82</td><td class="num">2.62</td><td class="num">171.87</td><td class="num">70.23</td><td class="num">174.86</td></tr>
+      <tr><td class="num">10⁹</td><td class="num">20.72</td><td class="num">3.03</td><td class="num">386.71</td><td class="num">158.04</td><td class="num">392.65</td></tr>
+      <tr><td class="num">10¹²</td><td class="num">27.63</td><td class="num">3.32</td><td class="num">687.50</td><td class="num">280.95</td><td class="num">696.81</td></tr>
+      <tr><td class="num">10¹⁵</td><td class="num">34.54</td><td class="num">3.54</td><td class="num">1074.20</td><td class="num">438.99</td><td class="num">1158.74</td></tr>
+      <tr class="target"><td>target</td><td colspan="2">log A · log log A</td><td class="num">122.21</td><td class="num">122.21</td><td class="num">122.21</td></tr>
+    </tbody>
+  </table>
+
+  <p>Reading the table: only the <strong>constant-η</strong> regime gives a bounded ratio against the target — i.e., the saving log survives the bootstrap. Both decaying regimes (η ~ 1/log A or 1/(log A)²) <em>collapse to triple-log behaviour</em>. The ratio C(A)/(log A · log log A) reaches 9.48 at A = 10¹⁵ in the (log A)² regime — Paul calls this the script's "failure threshold."</p>
+  <div class="callout"><strong>The methodological point:</strong> this rules out a soft, "qualitative" version of G — any ε(A) that decays with A is insufficient. The correct quantitative target is <em>absolute</em> η &gt; 0. That's not a convenience choice; the table forces it.</div>
+  <p>He also does an algebraic cross-check on the L<sub>7</sub> closure inequality (margin ≈ 0.1 for all A ≥ 100, well above Koch–Tataru smallness). The duration factor √δ<sub>A</sub> = A<sup>−2</sup> dominates the A<sup>1−η</sup> bilinear amplification by A<sup>1+η</sup>/log A.</p>
+</section>
+
+<!-- ===== Structural ===== -->
+<section id="structural">
+  <h2><span class="num">§5</span> Three competing approaches, one barrier — the most interesting meta-claim</h2>
+  <p>This is the part I'd flag as the <strong>most novel meta-observation</strong> in the paper. Paul sketches three independent technique families for the same double-log target, and shows each reduces to the <em>same</em> absolute-rate-class barrier ε(A) ≤ A<sup>−η</sup>:</p>
+
+  <table>
+    <thead><tr><th>Family</th><th>Lineage</th><th>Load-bearing step</th><th>Reduces to</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A.1 Carleman</strong></td><td>Escauriaza–Seregin–Šverák / Tao</td><td>Exponential-vs-polynomial cutoff comparison; T(1)-style symbol alignment</td><td>ε<sub>Car</sub>(A) ≤ A<sup>−η</sup> in the Carleman exponent</td></tr>
+      <tr><td><strong>A.2 Concentration-compactness</strong></td><td>Jia–Šverák, Kenig–Koch, NRS rigidity</td><td>Per-extraction geometric contraction over O(log log A) bubbles</td><td>ε<sub>NRS</sub>(A) ≤ A<sup>−η</sup> on rate-of-approach to backward self-similar profiles</td></tr>
+      <tr><td><strong>A.3 De Giorgi–Vasseur</strong></td><td>Vasseur 2007 level-set iteration on |u|²</td><td>Per-step exponent s=1 (full quadratic) Sobolev defect</td><td>ε<sub>DG</sub>(A) ≤ A<sup>−η</sup> in the per-step quadratic improvement</td></tr>
+      <tr style="background:rgba(188,140,255,.06)"><td><strong>+ Paul's Bony route</strong></td><td>This paper, L<sub>6</sub></td><td>Half-derivative gain on diagonal resonant block</td><td>ε(A) ≤ A<sup>−η</sup> on the off-diagonal residual (Hypothesis G)</td></tr>
+    </tbody>
+  </table>
+
+  <p>Paul is explicit that he is <strong>not</strong> claiming constant-level equivalence — the four hypotheses may have different content. He claims only that the same <em>shape</em> of barrier (ε(A) ≤ A<sup>−η</sup>, η &gt; 0 absolute) appears across four independent approaches.</p>
+  <div class="callout"><strong>If correct, this is the deeper structural observation in the paper.</strong> It suggests the absolute-η barrier is a real, method-independent obstruction to the double-log conjecture — not an artifact of Paul's specific Bony-paraproduct choice. Experts (Tao, Šverák, Vasseur) would scrutinise this claim carefully; it could be right, or it could be that the four reductions look superficially similar but in fact have distinct content. Either resolution is valuable.</div>
+</section>
+
+<!-- ===== NS-fingerprint ===== -->
+<section id="ns-fingerprint">
+  <h2><span class="num">§6</span> NS-fingerprint discharge — competent self-policing</h2>
+  <p>Tao's 2016 result on the <strong>averaged</strong> 3D Navier–Stokes equation gave finite-time blow-up for a modified system. This is the classical graveyard for false Navier–Stokes "proofs" — any conditional reduction of the regularity problem must <em>not</em> also accidentally apply to the averaged model, or else it would contradict Tao 2016.</p>
+  <p>Paul addresses this explicitly. The Bony decomposition <strong>fails to commute with the rotation projections</strong> of Tao's averaging operator B̃: writing Π<sub>α</sub> for the αth rotation projection,</p>
+  <div class="eq">Π<sub>α</sub> R(P<sub>j</sub>u, P<sub>k</sub>u)   ≠   R(Π<sub>α</sub>P<sub>j</sub>u, Π<sub>α</sub>P<sub>k</sub>u)</div>
+  <p>because rotation does not preserve the dyadic shell selection |j − k| ≤ 2. The non-commutator sum destroys the half-derivative cancellation underlying L<sub>6</sub>. So Paul's reduction is <strong>genuinely NS-specific</strong> in the sense of Tao 2016.</p>
+  <div class="callout"><strong>Why this matters for credibility:</strong> most amateur Navier–Stokes attempts skip this check, and most of them die on Tao 2016. Paul shows he knows the graveyard exists and walks around it.</div>
+</section>
+
+<!-- ===== Credibility ===== -->
+<section id="credibility">
+  <h2><span class="num">§7</span> Credibility assessment</h2>
+  <p>This is well above the typical "amateur Navier–Stokes" line, and explicitly short of "proof of Clay". My read:</p>
+
+  <div class="score-grid">
+    <div class="score"><h4>Tooling competence</h4><div class="bar"><i style="width:92%"></i></div><div class="label"><span>Above the line</span><span>0.92</span></div></div>
+    <div class="score"><h4>Engagement with the actual difficulty</h4><div class="bar"><i style="width:88%"></i></div><div class="label"><span>Above the line</span><span>0.88</span></div></div>
+    <div class="score"><h4>Self-policing (Tao 2016 graveyard)</h4><div class="bar"><i style="width:90%"></i></div><div class="label"><span>Above the line</span><span>0.90</span></div></div>
+    <div class="score"><h4>Numerical framing of η-regime</h4><div class="bar"><i style="width:85%"></i></div><div class="label"><span>Above the line</span><span>0.85</span></div></div>
+    <div class="score"><h4>Lemma-chain refereeability (L<sub>10</sub> in particular)</h4><div class="bar"><i style="width:55%"></i></div><div class="label"><span>Needs expert eyes</span><span>0.55</span></div></div>
+    <div class="score"><h4>"Four reductions, one barrier" claim</h4><div class="bar"><i style="width:50%"></i></div><div class="label"><span>Provocative, needs scrutiny</span><span>0.50</span></div></div>
+  </div>
+
+  <h3>What's right</h3>
+  <ul>
+    <li><strong>Every borrowed tool is correctly cited:</strong> Bahouri–Chemin–Danchin, Bony, CKN, ESS, Koch–Tataru, Tao 2019, Vasseur, Jia–Šverák, Kenig–Koch, NRS.</li>
+    <li><strong>The framing is honest:</strong> "conditional reduction", "the single non-standard ingredient is G", "we do not claim mutual reducibility at the constant level". No overclaiming.</li>
+    <li><strong>The numerical setup correctly identifies that absolute η &gt; 0 is required</strong> — not just qualitatively ε(A) → 0 but a sharp rate.</li>
+    <li><strong>The NS-fingerprint discharge is the right sanity check</strong> and is not skipped.</li>
+  </ul>
+
+  <h3>What needs careful refereeing</h3>
+  <ul>
+    <li><strong>L<sub>10</sub> — the log-count accounting.</strong> The whole reduction stands or falls on whether the bookkeeping in this step actually closes. A careful referee will rebuild the constants by hand and check that the saving from L<sub>6</sub> truly compensates the cost from L<sub>8</sub>+L<sub>9</sub>.</li>
+    <li><strong>The "four reductions, one barrier" claim (Appendix A).</strong> Experts will want to see whether the four hypotheses are <em>structurally</em> the same shape or genuinely equivalent at the constant level. The latter is a much stronger and more interesting claim.</li>
+    <li><strong>"Independent" author, no arXiv post.</strong> Not disqualifying — Yitang Zhang was at a hotel chain when he proved bounded gaps — but the paper hasn't gone through normal preprint norms yet.</li>
+    <li><strong>Hypothesis G itself is hard.</strong> Calderón–Zygmund sharpness questions at L³ criticality are unsolved for good reasons. Even if Theorem 1 is correct, G might never get proved.</li>
+  </ul>
+</section>
+
+<!-- ===== Workflow signal ===== -->
+<section id="workflow">
+  <h2><span class="num">§8</span> Workflow signal — read the Acknowledgements</h2>
+  <p>One line in the paper jumps out beyond the math:</p>
+  <div class="callout" style="border-left-color:var(--purple)"><em>"The numerical scripts and claim audit underlying §5 were produced under an automated multi-cycle workflow with Lean elaboration as an external verifier; the workflow is described separately. The author thanks anonymous referees of the project's documentation for sharpening the formulation of G."</em></div>
+  <p>Three flags I'd surface:</p>
+  <ol>
+    <li><strong>"Automated multi-cycle workflow"</strong> — Paul has built (or is using) an agent loop that produces math research output.</li>
+    <li><strong>"Lean elaboration as an external verifier"</strong> — Lean is the formal-proof-assistant gold standard. If parts of L<sub>1</sub>→L<sub>12</sub> have actually been elaborated in Lean, that's a significant credibility multiplier: the human-checker work shrinks to "does the Lean spec match the informal theorem statement".</li>
+    <li><strong>"Anonymous referees of the project's documentation"</strong> — phrased oddly. Almost certainly means internal automated reviewers (other agents) reviewed the formulation of G, not external human referees. Consistent with an agent-pipeline output.</li>
+  </ol>
+  <div class="callout"><strong>What this means:</strong> this paper appears to be the output of Paul's research-agent system applied to a named open problem in mathematics, with Lean used as the verifier. If so, the <em>system</em> is at least as much the story as the paper. A workflow that produces credible conditional reductions of Clay-adjacent problems is a serious capability.</div>
+</section>
+
+<!-- ===== Recommendation ===== -->
+<section id="recommendation">
+  <h2><span class="num">§9</span> Recommendation</h2>
+  <h3>Mathematical path</h3>
+  <ol>
+    <li><strong>arXiv post</strong> (math.AP, primary 35Q30 / 35B44 / 76D03). This is the obvious next step. Independent author + 10 pp conditional reduction is well within arXiv norms.</li>
+    <li><strong>Expert circulation, pre-arXiv:</strong> Tao (UCLA), Šverák (Minnesota), Vasseur (UT Austin), Kenig (Chicago), Koch (Bonn), Seregin (Oxford). A short "would you take a 10-page look at a reduction" email — normal in this area.</li>
+    <li><strong>Journal target:</strong> if Theorem 1 holds up under refereeing, <em>ARMA</em>, <em>Annals of PDE</em>, <em>Inventiones</em>, or <em>Comm. Math. Phys.</em> are the natural venues. (<em>Annals</em> only if Hypothesis G itself gets proved.)</li>
+  </ol>
+  <h3>Workflow path</h3>
+  <ol>
+    <li>Document the <em>multi-cycle workflow with Lean elaboration</em> as a separate technical paper / blog post. The system is independently publishable and arguably more commercially interesting than this specific math result.</li>
+    <li>If Lean elaboration is real, publish the Lean repo alongside the arXiv post. That single move turns "Independent author" from a minus to a plus.</li>
+  </ol>
+</section>
+
+<!-- ===== Reply ===== -->
+<section id="reply">
+  <h2><span class="num">§10</span> Draft reply to Paul</h2>
+  <div class="card card-bonus">
+    <p>Read it. Clear what it does and what it doesn't — a conditional reduction of Tao 2019's triple-log → double-log to a sharp L³-critical resonance-cancellation estimate (your Hypothesis G), with a clean log-count argument and a nice three-class structural observation that the absolute-η barrier seems to be the load-bearing slot across Carleman / concentration-compactness / De Giorgi as well as your Bony route. The NS-fingerprint discharge against Tao's averaged model is the right self-check; the η-regime table is the right way to show absolute-η is the correct quantitative target.</p>
+    <p>Three things I'd want to understand more before forming a view:</p>
+    <ol>
+      <li>Is Hypothesis G (or any meaningful subset of L<sub>1</sub>→L<sub>12</sub>) <strong>actually elaborated in Lean</strong>, or is "Lean elaboration as external verifier" load-bearing on the workflow rather than this paper specifically?</li>
+      <li>The "four reductions, one barrier" claim — is that <em>structural analogy</em>, or did you (or your pipeline) attempt explicit constant-level equivalence between, say, the Bony η and the Carleman η?</li>
+      <li>Plan for the off-diagonal residual subproblem (eq. 23) — is that a Calderón–Zygmund T(1) question, or something more bespoke at L³ criticality?</li>
+    </ol>
+    <p>Workflow-level: are you posting to arXiv, or circulating privately first? If this is a typical output of your multi-cycle system applied to a named open problem, the system itself is the story.</p>
+  </div>
+</section>
+
+<!-- ===== Companion reports ===== -->
+<section id="appendix">
+  <h2><span class="num">§11</span> Companion reports + context</h2>
+  <p>Other recent team-willie / Adaptation outputs that share the same review-and-reduce style:</p>
+  <ul>
+    <li><strong>Sierra report v2</strong> — public-voice rewrite, 6 questions to ask before Sierra is on your shortlist. <a href="https://claude.ai/public/artifacts/24c46cef-c532-4ad7-89e2-c4a9768c9915">Sierra Live App</a> (password <span class="math">sierra2026</span>) — same chat-with-data sidebar pattern, <span class="math">window.claude.complete()</span> wired to the visitor's Claude account.</li>
+    <li><strong>Foaster Live App</strong> — original template that Sierra Live and this artifact both follow stylistically.</li>
+    <li><strong>SarinApp source recovery</strong> — separate ops thread.</li>
+    <li><strong>Internal wiki</strong> — 425+ pages of competitive intel, project state, and fleet memory. Reviewed by Paul's agents through the <a href="https://wiki-gateway-production.up.railway.app">wiki gateway</a> (Phase 3 onboarding pending).</li>
+  </ul>
+  <p>If this review is useful, the structural pattern (review → reduce → publish under a chat-augmented artifact) is what we'd repeat for whatever you send next.</p>
+</section>
+
+<!-- ===== References ===== -->
+<section id="refs">
+  <h2><span class="num">§12</span> References (from the paper)</h2>
+  <ol class="refs">
+    <li>H. Bahouri, J.-Y. Chemin, R. Danchin. <em>Fourier Analysis and Nonlinear Partial Differential Equations.</em> Springer, 2011.</li>
+    <li>J.-M. Bony. Calcul symbolique et propagation des singularités. <em>Ann. Sci. ENS</em> 14 (1981).</li>
+    <li>L. Caffarelli, R. Kohn, L. Nirenberg. Partial regularity of suitable weak solutions of Navier–Stokes. <em>CPAM</em> 35 (1982).</li>
+    <li>L. Escauriaza, G. Seregin, V. Šverák. L<sub>3,∞</sub>-solutions of Navier–Stokes and backward uniqueness. <em>Russian Math. Surveys</em> 58 (2003).</li>
+    <li>H. Jia, V. Šverák. Local-in-space estimates near initial time. <em>Invent. Math.</em> 196 (2014).</li>
+    <li>C. Kenig, G. Koch. Alternative approach to regularity in critical spaces. <em>Ann. IHP NL</em> 28 (2011).</li>
+    <li>H. Koch, D. Tataru. Well-posedness for Navier–Stokes. <em>Adv. Math.</em> 157 (2001).</li>
+    <li>J. Nečas, M. Růžička, V. Šverák. On Leray's self-similar solutions. <em>Acta Math.</em> 176 (1996).</li>
+    <li>T. Tao. Finite time blowup for an averaged 3D Navier–Stokes equation. <em>J. AMS</em> 29 (2016).</li>
+    <li>T. Tao. Quantitative bounds for critically bounded solutions. <em>arXiv:1908.04958</em>, 2019.</li>
+    <li>A. Vasseur. A new proof of partial regularity of solutions to Navier–Stokes. <em>NoDEA</em> 14 (2007).</li>
+  </ol>
+</section>
+
+</main>
+
+<div class="footer">
+  Compiled by <code>team-willie</code> · 2026-05-11 ACST · Restricted to Paul Robinson + Willie Prosek<br>
+  Source paper saved at <code>meetings/paul-archive/files/paper.pdf</code> · Generated alongside the wiki at <code>wiki/sources/paul-paper-2026-05-10-navier-stokes.md</code><br>
+  This is a static report — to discuss live with chat-augmented sidebar, request a Live App build.
+</div>
+
+</div>
+
+<script>
+function checkPw(){
+  const pw=document.getElementById('pw').value.trim().toLowerCase();
+  if(pw==='paulrose' || pw==='paul-rose' || pw==='rosepaul'){
+    document.getElementById('gate').classList.add('hidden');
+    document.getElementById('report').classList.remove('hidden');
+    try{sessionStorage.setItem('ns_unlocked','1')}catch(e){}
+  } else {
+    document.getElementById('err').textContent='Wrong password. Try again.';
+    document.getElementById('pw').value='';
+  }
+}
+document.getElementById('pw').addEventListener('keydown',function(e){if(e.key==='Enter') checkPw()});
+try{if(sessionStorage.getItem('ns_unlocked')==='1'){document.getElementById('gate').classList.add('hidden');document.getElementById('report').classList.remove('hidden')}}catch(e){}
+</script>
+
+</body>
+</html>
